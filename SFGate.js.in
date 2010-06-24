@@ -1,0 +1,31 @@
+{
+    "translatorID"   : "574d4640-ea2b-4669-9895-72a4e7cc649a",
+    "translatorType" : 4,
+    "label"          : "SF Chronicle",
+    "creator"        : "Erik Hetzner",
+    "target"         : "http://(www\\.)?sfgate\\.com/cgi-bin/article\\.cgi",
+    "minVersion"     : "2.0",
+    "maxVersion"     : "",
+    "priority"       : 100,
+    "inRepository"   : true,
+    "lastUpdated"    : "2010-06-23 23:21:51"
+}
+
+//@framework@
+
+function mkScraper(type) {
+  if (type == "newspaperArticle") {
+    return new Scraper (
+        {   title            : new Xpath('//head/meta[@name="title"]/@content').text(),
+            itemType         : 'newspaperArticle',
+            publicationTitle : "San Francisco Chronicle",
+            date             : new Xpath('//div[@class="articleheadings"]//p[@class="date"]').text(),
+            creators         : new Xpath('//div[@class="articleheadings"]//p[@class="byline author vcard"]').text().remove(/,.*$/).cleanAuthor("author"),
+            attachments      : function (doc, url) { return [{ url: url, title:"SFGate Snapshot", mimeType:"text/html" }]; }
+        });
+  }
+}
+
+function detectWeb(doc, url) {
+    return "newspaperArticle";
+}
