@@ -11,34 +11,35 @@
     "lastUpdated"    : "2009-01-08 08:19:07"
 }
 
-@framework@
+//@framework@
 
 function mkScraper (itemType) {
-  if (itemType == "journalArticle") {
-    return new Scraper ({
-      title            : new Xpath('//h1[@class="articleTitle"]').first(),
-      itemType         : 'journalArticle',
-      publicationTitle : "Digital Humanities Quarterly",
-      date             : new Xpath("//div[@id=\"pubInfo\"]").match(/(.*)Volume\s+\d+\s+Number\s+\d+/).first(),
-      volume           : new Xpath("//div[@id=\"pubInfo\"]").match(/.*Volume\s+(\d+)\s+Number\s+\d+/).first(),
-      issue            : new Xpath("//div[@id=\"pubInfo\"]").match(/.*Volume\s+\d+\s+Number\s+(\d+)/).first(),
-      creators         : new Xpath('//div[@class="author"]/a[1]').cleanAuthor("author"),
-      attachments      : function (doc, url) { return [{ url: url, title:"DHQ Snapshot", mimeType:"text/html" }]; }
-    });
-  } else if (itemType == "multiple") {
-    return new MultiScraper({
-      itemTrans : mkScraper("journalArticle"),
-      items     : new Xpath('//div[@id="mainContent"]/div/p/a').raw()
-    });
-  }
+    if (itemType == "journalArticle") {
+        return new Scraper (
+            {   title            : new Xpath('//h1[@class="articleTitle"]').text(),
+                itemType         : 'journalArticle',
+                publicationTitle : "Digital Humanities Quarterly",
+                date             : new Xpath('//div[@id="pubInfo"]').text().match(/(.*)Volume\s+\d+\s+Number\s+\d+/),
+                volume           : new Xpath('//div[@id="pubInfo"]').text().match(/.*Volume\s+(\d+)\s+Number\s+\d+/),
+                issue            : new Xpath('//div[@id="pubInfo"]').text().match(/.*Volume\s+\d+\s+Number\s+(\d+)/),
+                creators         : new Xpath('//div[@class="author"]/a[1]').text().cleanAuthor("author"),
+                attachments      : function (doc, url) { return [{ url: url, title:"DHQ Snapshot", mimeType:"text/html" }]; }
+            });
+    } else if (itemType == "multiple") {
+        return new MultiScraper(
+            {   itemTrans : mkScraper("journalArticle"),
+                titles    : new Xpath('//div[@id="mainContent"]/div/p/a').text().trim(),
+                urls      : new Xpath('//div[@id="mainContent"]/div/p/a').key('href').text()
+            });
+    }
 }
 
 function detectWeb(doc, url) {
-  if (new Xpath('//div[@class="DHQarticle"]').evaluate(doc)) {
-      return "journalArticle";
-  } else if (new Xpath('//div[@id="mainContent"]/div/p').evaluate(doc)) {
-      return "multiple";
-  } else {
-      return undefined;
-  }
+    if (new Xpath('//div[@class="DHQarticle"]').evaluate(doc)) {
+        return "journalArticle";
+    } else if (new Xpath('//div[@id="mainContent"]/div/p').evaluate(doc)) {
+        return "multiple";
+    } else {
+        return undefined;
+    }
 }

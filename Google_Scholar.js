@@ -1,3 +1,16 @@
+{
+    "translatorID"   : "fe6cf126-ced0-422b-b05f-b51a00726849",
+    "translatorType" : 4,
+    "label"          : "Google Scholar",
+    "creator"        : "Simon Kornblith",
+    "target"         : "http://scholar\\.google\\.(?:com|com?\\.[a-z]{2}|[a-z]{2})/scholar",
+    "minVersion"     : "1.0.0b3.r1",
+    "maxVersion"     : "",
+    "priority"       : 100,
+    "inRepository"   : true,
+    "lastUpdated"    : "2010-05-02 15:55:00"
+}
+
 /* Generic code */
 function Base (init) {
     this._evaluate = function (val, doc, url) {
@@ -119,9 +132,9 @@ function DelegateTranslator (init) {
         var tmpItem;
         var text = Zotero.Utilities.retrieveSource(url);
         this._translator.setHandler("itemDone", function(obj, item) { 
-                                        tmpItem = item;
-                                        /* this does not seem to be working */
-                                        if (attachments) { item.attachments = attachments; }
+                                        //tmpItem = item;
+                                        if (attachments) { Zotero.debug("ARRRR"); Zotero.debug(attachments); item.attachments = attachments; }
+                                        item.complete();
                                     });
 	this._translator.setString(text);
         this._translator.translate();
@@ -261,8 +274,37 @@ function doWeb(doc, url) {
     var items = scraper.makeItems(doc, url);
     for (var i in items) {
         Zotero.debug("Completing: " + items[i]);
-        items[i].complete();   
+        try {
+            items[i].complete();   
+        } catch (x) {
+        }
     }
     Zotero.debug("Leaving doWeb");
 }
 /* End generic code */
+
+function mkScraper(itemType) {
+    if (itemType == "multiple") {
+        return new MultiScraper(
+            {   itemTrans    : new DelegateTranslator({translatorType : "import",
+                                                       translatorId   : "9cb70025-a888-4a29-a210-93ec52da40d4"}),
+                titles       : new Xpath('//div[@class="gs_r"]//h3').text(),
+                urls         : new Xpath('//a[contains(@href, "scholar.bib")]').key('href').text(),
+                attachments  : new Xpath('//div[@class="gs_r"]//h3').sub('.//a').key('href').text().makeAttachment("text/html", "Google Scholar Linked Page"),
+                beforeFilter : function (doc, url) {
+                    var haveBibTeXLinks = new Xpath('//a[contains(@href, "scholar.bib")]').evaluate(doc);
+	            if(!haveBibTeXLinks) {
+	                url = url.replace (/hl\=[^&]*&?/, "");
+	                url = url.replace("scholar?", "scholar_setprefs?hl=en&scis=yes&scisf=4&submit=Save+Preferences&");
+                    }
+                    return url;
+                }
+            });
+    } else {
+        return undefined;
+    }
+}
+
+function detectWeb(doc, url) {
+    return "multiple";
+}

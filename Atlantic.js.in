@@ -16,11 +16,11 @@
 function mkScraper(type) {
   if (type == "magazineArticle") {
     return new Scraper ({
-      title            : new Xpath('//head/meta[@name="title"]/@content').remove(/- Magazine - The Atlantic/).trim().first(),
+      title            : new Xpath('//head/meta[@name="title"]/@content').text().remove(/- Magazine - The Atlantic/).trim(),
       itemType         : 'magazineArticle',
       publicationTitle : "The Atlantic Monthly",
-      date             : new Xpath('//div[@class="articleHead"]/h4[@class="issueDetails"]/a[@class="issueTitle"]').match(/([\/A-Za-z\/]+ [0-9]+)/).first(),
-      creators         : new Xpath('//div[@class="articleHead"]/h5[@class="author"]/a[@class="author"]').cleanAuthor("author")
+      date             : new Xpath('//div[@class="articleHead"]/h4[@class="issueDetails"]/a[@class="issueTitle"]').text().match(/([\/A-Za-z\/]+ [0-9]+)/),
+      creators         : new Xpath('//div[@class="articleHead"]/h5[@class="author"]/a[@class="author"]').text().cleanAuthor("author")
 //      attachments      : function (doc, url) { return [{ url: url, title:"Atlantic Snapshot", mimeType:"text/html" }]; }
     });
   }
