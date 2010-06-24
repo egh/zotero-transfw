@@ -69,8 +69,10 @@ function MultiScraper (init) {
     this._mkAttachments = function(doc, url, urls) {
         var attachmentsArray = this._evaluate(this.attachments, doc, url);
         var attachmentsDict = new Object();
-        for (var i in urls) {
-            attachmentsDict[urls[i]] = attachmentsArray[i];
+        if (attachmentsArray) {
+            for (var i in urls) {
+                attachmentsDict[urls[i]] = attachmentsArray[i];
+            }
         }
         return attachmentsDict;
     };
