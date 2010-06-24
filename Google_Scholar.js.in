@@ -38,3 +38,5 @@ function mkScraper(itemType) {
 function detectWeb(doc, url) {
     return "multiple";
 }
+
+function doWeb(doc, url) { fwDoWeb(doc, url); }

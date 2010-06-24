@@ -43,3 +43,5 @@ function detectWeb(doc, url) {
         return undefined;
     }
 }
+
+function doWeb(doc, url) { fwDoWeb(doc, url); }

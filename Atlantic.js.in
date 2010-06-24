@@ -11,7 +11,7 @@
     "lastUpdated"    : "2009-01-08 08:19:07"
 }
 
-@framework@
+//@framework@
 
 function mkScraper(type) {
   if (type == "magazineArticle") {
@@ -29,3 +29,5 @@ function mkScraper(type) {
 function detectWeb(doc, url) {
     return "magazineArticle";
 }
+
+function doWeb(doc, url) { fwDoWeb(doc, url); }

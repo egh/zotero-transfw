@@ -257,14 +257,14 @@ function Xpath(_xpath) {
 
 Xpath.prototype = new StringMagic();
 
-function doWeb(doc, url) {
-    Zotero.debug("Entering doWeb");
+function fwDoWeb(doc, url) {
+    Zotero.debug("Entering fwDoWeb");
     var scraper = mkScraper(detectWeb(doc, url));
     var items = scraper.makeItems(doc, url);
     for (var i in items) {
         Zotero.debug("Completing: " + items[i]);
         items[i].complete();   
     }
-    Zotero.debug("Leaving doWeb");
+    Zotero.debug("Leaving fwDoWeb");
 }
 /* End generic code */
