@@ -1,6 +1,11 @@
 /* Generic code */
-function Base (init) {
-    this._evaluate = function (val, doc, url) {
+var FW = {
+    _scrapers : new Array()
+};
+
+FW._Base = function () {
+    this.evaluate = function (key, doc, url) {
+	var val = this[key];
         var valtype = typeof val;
         if (valtype === 'string') {
             return val;
@@ -12,9 +17,13 @@ function Base (init) {
             return undefined;
         }
     };
-}
+};
 
-function Scraper (init) {
+FW.Scraper = function (init) { 
+    FW._scrapers.push(new FW._Scraper(init));
+};
+
+FW._Scraper = function (init) {
     for (x in init) {
         this[x] = init[x];
     }
@@ -25,27 +34,34 @@ function Scraper (init) {
         var fields = new Array("title", "publicationTitle", "date", "volume", "issue");
         for (var i in fields) {
             var field = fields[i];
-            var fieldVal = this._evaluate(this[field], doc, url);
+            var fieldVal = this.evaluate(field, doc, url);
             if (fieldVal instanceof Array) {
                 item[field] = fieldVal[0];
             } else {
                 item[field] = fieldVal;
             }
         }
-        item.attachments = this._evaluate(this.attachments, doc, url);
-        var creators = this._evaluate(this.creators, doc, url);
-        if (creators) {
-            for (i in creators) {
-                item.creators.push(creators[i]);
+        var multiFields = ["creators", "attachments"];
+        for (var j in multiFields) {
+            var key = multiFields[j];
+            var val = this.evaluate(key, doc, url);
+            if (val) {
+                for (var k in val) {
+                    item[key].push(val[k]);
+                }
             }
         }
         return [item];
     };
-}
+};
 
-Scraper.prototype = new Base;
+FW._Scraper.prototype = new FW._Base;
 
-function MultiScraper (init) {
+FW.MultiScraper = function (init) { 
+    FW._scrapers.push(new FW._MultiScraper(init));
+};
+
+FW._MultiScraper = function (init) {
     for (x in init) {
         this[x] = init[x];
     }
@@ -63,11 +79,11 @@ function MultiScraper (init) {
         for (var j in Zotero.selectItems(this._mkSelectItems(titles, urls))) {
             items.push(j);
         }
-        return items;
+       return items;
     };
 
     this._mkAttachments = function(doc, url, urls) {
-        var attachmentsArray = this._evaluate(this.attachments, doc, url);
+        var attachmentsArray = this.evaluate('attachments', doc, url);
         var attachmentsDict = new Object();
         if (attachmentsArray) {
             for (var i in urls) {
@@ -85,30 +101,40 @@ function MultiScraper (init) {
                 return this.makeItems(Zotero.Utilities.retrieveDocument(url), newurl);
             }
         }
-        var titles = this._evaluate(this.titles, doc, url);
-        var urls = this._evaluate(this.urls, doc, url);
+        var titles = this.evaluate('titles', doc, url);
+        var urls = this.evaluate('urls', doc, url);
         var itemsToUse = this._selectItems(titles, urls);
         var attachments = this._mkAttachments(doc, url, urls);
         if(!itemsToUse) {
 	    Zotero.done(true);
 	    return [];
 	} else {
-            var itemTrans = this.itemTrans;
             var madeItems = new Array();
             for (var i in itemsToUse) {
                 var url1 = itemsToUse[i];
                 var doc1 = Zotero.Utilities.retrieveDocument(url1);
+                var itemTrans;
+                if (this.itemTrans) {
+                    itemTrans = this.itemTrans;                    
+                } else {
+                    itemTrans = FW.getScraper(doc1, url1);                    
+                }
+                Zotero.debug(itemTrans);
                 var items = itemTrans.makeItems(doc1, url1, attachments[url1]);
                 madeItems.push(items[0]);
             }
             return madeItems;
         }
     };
-}
+};
 
-MultiScraper.prototype = new Base;
+FW._MultiScraper.prototype = new FW._Base;
 
-function DelegateTranslator (init) {
+FW.DelegateTranslator = function (init) { 
+    return new FW._DelegateTranslator(init);
+};
+
+FW._DelegateTranslator = function (init) {
     for (x in init) {
         this[x] = init[x];
     }
@@ -130,11 +156,11 @@ function DelegateTranslator (init) {
         Zotero.debug("Leaving DelegateTranslator.makeItems");
         return [tmpItem];
     };
-}
+};
 
-DelegateTranslator.prototype = new Scraper;
+FW.DelegateTranslator.prototype = new FW._Scraper;
 
-function StringMagic() {
+FW._StringMagic = function () {
     this._filters = new Array();
 
     this.addFilter = function(filter) {
@@ -142,11 +168,16 @@ function StringMagic() {
         return this;
     };
 
-    this.replace = function(s1, s2) {
-        this.addFilter(function(s) {
-            return s.replace(s1, s2);
+    this.split = function(re) {
+        return this.addFilter(function(s) {
+            return s.split(re).filter(function(e) { return (e != ""); });
         });
-        return this;
+    };
+
+    this.replace = function(s1, s2, flags) {
+        return this.addFilter(function(s) {
+            return s.replace(s1, s2, flags);
+        });
     };
 
     this.prepend = function(prefix) {
@@ -157,53 +188,72 @@ function StringMagic() {
         return this.replace(/$/, postfix);
     };
 
-    this.remove = function(toStrip) {
-        this.replace(toStrip, '');
-        return this;
+    this.remove = function(toStrip, flags) {
+        return this.replace(toStrip, '', flags);
     };
 
     this.trim = function() {
-        this.addFilter(function(s) { return Zotero.Utilities.trim(s); });
-        return this;
+        return this.addFilter(function(s) { return Zotero.Utilities.trim(s); });
     };
 
     this.trimInternal = function() {
-        this.addFilter(function(s) { return Zotero.Utilities.trimInternal(s); });
-        return this;
+        return this.addFilter(function(s) { return Zotero.Utilities.trimInternal(s); });
     };
 
-    this.match = function(re) {
-        this.addFilter(function(s) { return s.match(re)[1]; });
-        return this;
+    this.match = function(re, group) {
+        if (!group) group = 1;
+        return this.addFilter(function(s) { return s.match(re)[group]; });
     };
 
     this.cleanAuthor = function(type) {
-        this.addFilter(function(s) { return Zotero.Utilities.cleanAuthor(s, type); });
-        return this;
+        return this.addFilter(function(s) { return Zotero.Utilities.cleanAuthor(s, type); });
     };
 
     this.key = function(field) {
-        this.addFilter(function(n) { return n[field]; });
-        return this;
+        return this.addFilter(function(n) { return n[field]; });
+    };
+
+    this.capitalizeTitle = function() {
+        return this.addFilter(function(s) { return Zotero.Utilities.capitalizeTitle(s); });
+    };
+
+    this.unescapeHTML = function() {
+        return this.addFilter(function(s) { return Zotero.Utilities.unescapeHTML(s); });
+    };
+
+    this.unescape = function() {
+        return this.addFilter(function(s) { return unescape(s); });
     };
 
     this.makeAttachment = function(type, title) {
         var filter = function(url) {
             if (url) {
-                return [{ url   : url,
-                          type  : type,
-                          title : title }];
+                return { url   : url,
+                         type  : type,
+                         title : title };
             } else {
-                return [];
+                return undefined;
             }
         };
-        this.addFilter(filter);
-        return this;
+        return this.addFilter(filter);
+    };
+
+    this._flatten = function(a) {
+        var retval = new Array();
+        for (var i in a) {
+            if (a[i] && (typeof a[i]) === 'object' && a[i].splice) { /* assume only arrays have the splice property */
+                retval = retval.concat(this._flatten(a[i]));
+            } else {
+                retval.push(a[i]);
+            }
+        }
+        return retval;
     };
 
     this._applyFilters = function(a, doc1) {
         Zotero.debug("Entering StringMagic._applyFilters");
         for (i in this._filters) {
+            a = this._flatten(a);
             for (var j = 0 ; j < a.length ; j++) {
                 try {
                     if (typeof a[j] === 'undefined') { continue; }
@@ -218,7 +268,41 @@ function StringMagic() {
     };
 };
 
-function Xpath(_xpath) {
+FW.PageText = function () {
+    return new FW._PageText();
+};
+
+FW._PageText = function() {
+    this._filters = new Array();
+
+    this.evaluate = function (doc) {        
+        var a = [doc.documentElement.innerHTML];
+        a = this._applyFilters(a, doc);
+        if (a.length == 0) { return false; }
+        else { return a; }
+    };
+};
+
+FW._PageText.prototype = new FW._StringMagic();
+
+FW.Url = function () { return new FW._Url(); };
+
+FW._Url = function () {
+    this._filters = new Array();
+
+    this.evaluate = function (doc, url) {        
+        var a = [url];
+        a = this._applyFilters(a, doc);
+        if (a.length == 0) { return false; }
+        else { return a; }
+    };
+};
+
+FW._Url.prototype = new FW._StringMagic();
+
+FW.Xpath = function (xpathExpr) { return new FW._Xpath(xpathExpr); };
+
+FW._Xpath = function (_xpath) {
     this._xpath = _xpath;
     this._filters = new Array();
 
@@ -253,18 +337,39 @@ function Xpath(_xpath) {
         if (a.length == 0) { return false; }
         else { return a; }
     };
-}
+};
 
-Xpath.prototype = new StringMagic();
+FW._Xpath.prototype = new FW._StringMagic();
 
-function fwDoWeb(doc, url) {
-    Zotero.debug("Entering fwDoWeb");
-    var scraper = mkScraper(detectWeb(doc, url));
+FW.detectWeb = function (doc, url) {
+    for (var i in FW._scrapers) {
+	var scraper = FW._scrapers[i];
+	var itemType = scraper.evaluate('itemType', doc, url);
+	if (!scraper.detect) {
+	    return itemType;
+	} else {
+	    var v = scraper.evaluate('detect', doc, url);
+            if (v.length > 0 && v[0]) {
+		return itemType;
+	    }
+	}
+    }
+    return undefined;
+};
+
+FW.getScraper = function (doc, url) {
+    var itemType = FW.detectWeb(doc, url);
+    return FW._scrapers.filter(function(s) s.evaluate('itemType', doc, url) == itemType)[0];
+};
+
+FW.doWeb = function (doc, url) {
+    Zotero.debug("Entering FW.doWeb");
+    var scraper = FW.getScraper(doc, url);
     var items = scraper.makeItems(doc, url);
     for (var i in items) {
-        Zotero.debug("Completing: " + items[i]);
         items[i].complete();   
     }
-    Zotero.debug("Leaving fwDoWeb");
-}
+    Zotero.debug("Leaving FW.doWeb");
+};
+
 /* End generic code */

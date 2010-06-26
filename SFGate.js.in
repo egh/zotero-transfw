@@ -13,21 +13,13 @@
 
 //@framework@
 
-function mkScraper(type) {
-  if (type == "newspaperArticle") {
-    return new Scraper (
-        {   title            : new Xpath('//head/meta[@name="title"]/@content').text(),
-            itemType         : 'newspaperArticle',
-            publicationTitle : "San Francisco Chronicle",
-            date             : new Xpath('//div[@class="articleheadings"]//p[@class="date"]').text(),
-            creators         : new Xpath('//div[@class="articleheadings"]//p[@class="byline author vcard"]').text().remove(/,.*$/).cleanAuthor("author"),
-            attachments      : function (doc, url) { return [{ url: url, title:"SFGate Snapshot", mimeType:"text/html" }]; }
-        });
-  }
-}
+function detectWeb(doc, url) { return FW.detectWeb(doc, url); }
+function doWeb(doc, url) { return FW.doWeb(doc, url); }
 
-function detectWeb(doc, url) {
-    return "newspaperArticle";
-}
-
-function doWeb(doc, url) { fwDoWeb(doc, url); }
+FW.Scraper({ itemType         : 'newspaperArticle',
+             title            : FW.Xpath('//head/meta[@name="title"]/@content').text(),
+             publicationTitle : "San Francisco Chronicle",
+             date             : FW.Xpath('//div[@class="articleheadings"]//p[@class="date"]').text(),
+             creators         : FW.Xpath('//div[@class="articleheadings"]//p[@class="byline author vcard"]').
+               text().remove(/,.*$/).cleanAuthor("author"),
+             attachments      : FW.Url().makeAttachment("text/html", "SFGate Snapshot") });
