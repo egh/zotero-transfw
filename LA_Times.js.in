@@ -31,3 +31,5 @@ FW.MultiScraper({   itemType  : "multiple",
                     detect    : FW.Xpath('//ul[@class="results-list"]'),
                     titles    : FW.Xpath('//ul[@class="results-list"]//h3').text().trim(),
                     urls      : FW.Xpath('//ul[@class="results-list"]//h3/a').key('href').text() });
+
+// TODO - latimes blogs do not work
