@@ -46,7 +46,7 @@ FW._Scraper = function (init) {
     this.makeItems = function (doc, url) {
         var item = new Zotero.Item(this.itemType);
         item.url = url;
-        var fields = new Array("title", "publicationTitle", "date", "volume", "issue");
+        var fields = new Array("abstractNote", "date", "ISSN", "issue", "publicationTitle", "section", "title", "volume");
         for (var i in fields) {
             var field = fields[i];
             var fieldVal = this.evaluate(field, doc, url);
@@ -134,7 +134,6 @@ FW._MultiScraper = function (init) {
                 } else {
                     itemTrans = FW.getScraper(doc1, url1);                    
                 }
-                Zotero.debug(itemTrans);
                 var items = itemTrans.makeItems(doc1, url1, attachments[url1]);
                 madeItems.push(items[0]);
             }
