@@ -3,7 +3,7 @@
     "translatorType" : 4,
     "label"          : "LA Times",
     "creator"        : "Erik Hetzner",
-    "target"         : "^http://www\\.latimes\\.com/",
+    "target"         : "^http://(www\\.|latimesblogs\\.)?latimes\\.com/",
     "minVersion"     : "2.0",
     "maxVersion"     : "",
     "priority"       : 100,
@@ -16,6 +16,7 @@
 function detectWeb(doc, url) { return FW.detectWeb(doc, url); }
 function doWeb(doc, url) { return FW.doWeb(doc, url); }
 
+/* Articles */
 FW.Scraper({ itemType         : 'newspaperArticle',
              detect           : FW.Xpath('//div[@class="story"]/h1').text(),
              title            : FW.Xpath('//div[@class="story"]/h1').text().trim(),
@@ -27,9 +28,17 @@ FW.Scraper({ itemType         : 'newspaperArticle',
              publicationTitle : "Los Angeles Times",
              section          : FW.Xpath('//span[@id="sectionBreadcrumb"]').text().capitalizeTitle() });
 
-FW.MultiScraper({   itemType  : "multiple",
-                    detect    : FW.Xpath('//ul[@class="results-list"]'),
-                    titles    : FW.Xpath('//ul[@class="results-list"]//h3').text().trim(),
-                    urls      : FW.Xpath('//ul[@class="results-list"]//h3/a').key('href').text() });
+/* Blog posts */
+/* Cannot get creator usefully from the junk they give us. */
+FW.Scraper({ itemType         : 'blogPost',
+             detect           : FW.Xpath('//div[@id="blog-header"]'),
+             title            : FW.Xpath('//div[@class="entry"]/h1[@class="entry-header"]').text().trim(),
+             attachments      : FW.Url().makeAttachment("text/html", "LA Times Snapshot"),
+             date             : FW.Xpath('//div[@class="entry"]/div[@class="time"]').text().match(/^(.* [0-9]{4})/),
+             publicationTitle : FW.Xpath('//div[@id="blog-header"]/h1').text().prepend("LA Times Blogs: ") });
 
-// TODO - latimes blogs do not work
+/* Search results */
+FW.MultiScraper({ itemType  : "multiple",
+                  detect    : FW.Xpath('//ul[@class="results-list"]'),
+                  titles    : FW.Xpath('//ul[@class="results-list"]//h3').text().trim(),
+                  urls      : FW.Xpath('//ul[@class="results-list"]//h3/a').key('href').text() });
