@@ -3,7 +3,7 @@
     "translatorType" : 4,
     "label"          : "SF Chronicle",
     "creator"        : "Erik Hetzner",
-    "target"         : "http://(www\\.)?sfgate\\.com/cgi-bin/article\\.cgi",
+    "target"         : "http://(www\\.)?sfgate\\.com/cgi-bin/(article\\.cgi|qws)",
     "minVersion"     : "2.0",
     "maxVersion"     : "",
     "priority"       : 100,
@@ -16,10 +16,19 @@
 function detectWeb(doc, url) { return FW.detectWeb(doc, url); }
 function doWeb(doc, url) { return FW.doWeb(doc, url); }
 
+/* Basic */
 FW.Scraper({ itemType         : 'newspaperArticle',
+             detect           : FW.Xpath('//div[@class="articleheadings"]'),
              title            : FW.Xpath('//head/meta[@name="title"]/@content').text(),
-             publicationTitle : "San Francisco Chronicle",
-             date             : FW.Xpath('//div[@class="articleheadings"]//p[@class="date"]').text(),
+             attachments      : FW.Url().makeAttachment("text/html", "SFGate Snapshot"),
              creators         : FW.Xpath('//div[@class="articleheadings"]//p[@class="byline author vcard"]').
-               text().remove(/,.*$/).cleanAuthor("author"),
-             attachments      : FW.Url().makeAttachment("text/html", "SFGate Snapshot") });
+               text().remove(/,.*$/).remove(/^By/).trim().capitalizeTitle().cleanAuthor("author"),
+             date             : FW.Xpath('//div[@class="articleheadings"]//p[@class="date"]').text(),
+             ISSN             : "1932-8672",
+             publicationTitle : "San Francisco Chronicle" });
+
+/* Search results */
+FW.MultiScraper({ itemType  : "multiple",
+                  detect    : FW.Xpath('//div[@class="results_site"]'),
+                  titles    : FW.Xpath('//div[@class="results_site"]//div[@class="item clearfix"]/h4').text().trim(),
+                  urls      : FW.Xpath('//div[@class="results_site"]//div[@class="item clearfix"]/h4/a').key('href').text() });
