@@ -190,7 +190,11 @@ FW._StringMagic = function () {
 
     this.replace = function(s1, s2, flags) {
         return this.addFilter(function(s) {
-            return s.replace(s1, s2, flags);
+            if (s.match(s1)) {
+                return s.replace(s1, s2, flags);
+            } else {
+                return s;
+            }
         });
     };
 
@@ -268,13 +272,15 @@ FW._StringMagic = function () {
         Zotero.debug("Entering StringMagic._applyFilters");
         for (i in this._filters) {
             a = this._flatten(a);
+            /* remove undefined array entries */
+            a = a.filter(function(x) { return typeof(x) != 'undefined'; });
             for (var j = 0 ; j < a.length ; j++) {
                 try {
                     if (typeof a[j] === 'undefined') { continue; }
                     else { a[j] = this._filters[i](a[j], doc1); }
                 } catch (x) {
                     a[j] = undefined;
-                    Zotero.debug("Caught exception on filter: " + this._filters[i]);
+                    Zotero.debug("Caught exception " + x + "on filter: " + this._filters[i]);
                 }
             }
         }
