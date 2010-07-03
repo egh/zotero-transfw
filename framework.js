@@ -45,17 +45,118 @@ FW._Scraper = function (init) {
         this[x] = init[x];
     }
 
+    this._singleFieldNames = [
+        "abstractNote",
+        "applicationNumber",
+        "archiveLocation",
+        "artworkMedium",
+        "artworkSize",
+        "assignee",
+        "audioFileType",
+        "audioRecordingType",
+        "billNumber",
+        "blogTitle",
+        "bookTitle",
+        "callNumber",
+        "caseName",
+        "code",
+        "codeNumber",
+        "codePages",
+        "codeVolume",
+        "committee",
+        "company",
+        "conferenceName",
+        "country",
+        "court",
+        "date",
+        "dateDecided",
+        "dateEnacted",
+        "dictionaryTitle",
+        "distributor",
+        "documentNumber",
+        "DOI",
+        "edition",
+        "encyclopediaTitle",
+        "episodeNumber",
+        "extra",
+        "firstPage",
+        "forumTitle",
+        "history",
+        "institution",
+        "interviewMedium",
+        "ISBN",
+        "ISSN",
+        "issue",
+        "issueDate",
+        "journalAbbreviation",
+        "label",
+        "language",
+        "legalStatus",
+        "legislativeBody",
+        "letterType",
+        "manuscriptType",
+        "mapType",
+        "meetingName",
+        "nameOfAct",
+        "network",
+        "notes",
+        "number",
+        "numberOfVolumes",
+        "pages",
+        "patentNumber",
+        "place",
+        "postType",
+        "presentationType",
+        "priorityNumbers",
+        "proceedingsTitle",
+        "programmingLanguage",
+        "publicLawNumber",
+        "publicationTitle",
+        "publisher",
+        "references",
+        "related",
+        "reportNumber",
+        "reportType",
+        "reporter",
+        "reporterVolume",
+        "repository",
+        "rights",
+        "runningTime",
+        "scale",
+        "section",
+        "series",
+        "seriesNumber",
+        "seriesText",
+        "seriesTitle",
+        "session",
+        "shortTitle",
+        "source",
+        "studio",
+        "subject",
+        "system",
+        "tags",
+        "thesisType",
+        "title",
+        "university",
+        "url",
+        "version",
+        "videoRecordingType",
+        "volume",
+        "websiteTitle",
+        "websiteType" ];
+
     this.makeItems = function (doc, url) {
         var item = new Zotero.Item(this.itemType);
         item.url = url;
-        var fields = new Array("abstractNote", "date", "ISSN", "issue", "publicationTitle", "section", "title", "volume");
-        for (var i in fields) {
-            var field = fields[i];
-            var fieldVal = this.evaluate(field, doc, url);
-            if (fieldVal instanceof Array) {
-                item[field] = fieldVal[0];
-            } else {
-                item[field] = fieldVal;
+        for (var i in this._singleFieldNames) {
+            var field = this._singleFieldNames[i];
+            if (this[field]) {
+                var fieldVal = this.evaluate(field, doc, url);
+                if (fieldVal instanceof Array) {
+                    item[field] = fieldVal[0];
+                } else {
+                    item[field] = fieldVal;
+                }
             }
         }
         var multiFields = ["creators", "attachments"];
