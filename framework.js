@@ -225,8 +225,8 @@ FW._StringMagic = function () {
         return this.addFilter(function(s) { return s.match(re)[group]; });
     };
 
-    this.cleanAuthor = function(type) {
-        return this.addFilter(function(s) { return Zotero.Utilities.cleanAuthor(s, type); });
+    this.cleanAuthor = function(type, useComma) {
+        return this.addFilter(function(s) { return Zotero.Utilities.cleanAuthor(s, type, useComma); });
     };
 
     this.key = function(field) {
