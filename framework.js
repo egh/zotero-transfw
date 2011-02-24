@@ -15,24 +15,48 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+function flatten(a) {
+    var retval = new Array();
+    for (var i in a) {
+        var entry = a[i];
+        if (entry instanceof Array) {
+            retval = retval.concat(flatten(entry));
+        } else {
+            retval.push(entry);
+        }
+    }
+    return retval;
+}
+
 /* Generic code */
 var FW = {
     _scrapers : new Array()
 };
 
 FW._Base = function () {
-    this.evaluate = function (key, doc, url) {
-	var val = this[key];
+    this.evaluateThing = function(val, doc, url) {
         var valtype = typeof val;
         if (valtype === 'string') {
             return val;
         } else if (valtype === 'object') {
-            return val.evaluate(doc, url);
+            if (val instanceof Array) {
+                /* map over each array val */
+                /* this.evaluate gets out of scope */
+                var parentEval = this.evaluateThing;
+                var retval = val.map ( function(i) { return parentEval (i, doc, url); } );
+                return flatten(retval);
+            } else {
+                return val.evaluate(doc, url);
+            }
         } else if (valtype === 'function') {
             return val(doc, url);
         } else {
             return undefined;
         }
+    };
+
+    this.evaluate = function (key, doc, url) {
+        return this.evaluateThing(this[key], doc, url);
     };
 };
 
@@ -368,22 +392,10 @@ FW._StringMagic = function () {
         return this.addFilter(filter);
     };
 
-    this._flatten = function(a) {
-        var retval = new Array();
-        for (var i in a) {
-            if (a[i] && (typeof a[i]) === 'object' && a[i].splice) { /* assume only arrays have the splice property */
-                retval = retval.concat(this._flatten(a[i]));
-            } else {
-                retval.push(a[i]);
-            }
-        }
-        return retval;
-    };
-
     this._applyFilters = function(a, doc1) {
         Zotero.debug("Entering StringMagic._applyFilters");
         for (i in this._filters) {
-            a = this._flatten(a);
+            a = flatten(a);
             /* remove undefined or null array entries */
             a = a.filter(function(x) { return ((x !== undefined) && (x !== null)); });
             for (var j = 0 ; j < a.length ; j++) {
