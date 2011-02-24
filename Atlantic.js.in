@@ -21,7 +21,7 @@ FW.Scraper({   title            : FW.Xpath('//head/meta[@name="title"]/@content'
 	       itemType         : 'magazineArticle',
 	       publicationTitle : "The Atlantic Monthly",
 	       date             : FW.Xpath('//div[@class="articleHead"]/h4[@class="issueDetails"]/a[@class="issueTitle"]').
-                 text().match(/([\/A-Za-z\/]+ [0-9]+)/),
+                 text().match(/([\/A-Za-z\/]+ [0-9]+)/, 1),
 	       creators         : FW.Xpath('//div[@class="articleHead"]/h5[@class="author"]/a[@class="author"]').
 	         text().cleanAuthor("author") });
                // attachments not working now...

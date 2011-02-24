@@ -36,7 +36,7 @@ FW.Scraper({ itemType         : 'blogPost',
              detect           : FW.Xpath('//div[@id="blog-header"]'),
              title            : FW.Xpath('//div[@class="entry"]/h1[@class="entry-header"]').text().trim(),
              attachments      : FW.Url().makeAttachment("text/html", "LA Times Snapshot"),
-             date             : FW.Xpath('//div[@class="entry"]/div[@class="time"]').text().match(/^(.* [0-9]{4})/),
+             date             : FW.Xpath('//div[@class="entry"]/div[@class="time"]').text().match(/^(.* [0-9]{4})/, 1),
              publicationTitle : FW.Xpath('//div[@id="blog-header"]/h1').text().prepend("LA Times Blogs: ") });
 
 /** Search results

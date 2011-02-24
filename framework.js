@@ -327,7 +327,7 @@ FW._StringMagic = function () {
     };
 
     this.match = function(re, group) {
-        if (!group) group = 1;
+        if (!group) group = 0;
         return this.addFilter(function(s) { 
                                   var m = s.match(re);
                                   if (m === undefined) { return undefined; }

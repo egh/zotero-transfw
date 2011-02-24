@@ -20,9 +20,9 @@ FW.Scraper({   detect           : FW.Xpath('//div[@class="DHQarticle"]'),
                title            : FW.Xpath('//h1[@class="articleTitle"]').text(),
                itemType         : 'journalArticle',
                publicationTitle : "Digital Humanities Quarterly",
-               date             : FW.Xpath('//div[@id="pubInfo"]').text().match(/(.*)Volume\s+\d+\s+Number\s+\d+/),
-               volume           : FW.Xpath('//div[@id="pubInfo"]').text().match(/.*Volume\s+(\d+)\s+Number\s+\d+/),
-               issue            : FW.Xpath('//div[@id="pubInfo"]').text().match(/.*Volume\s+\d+\s+Number\s+(\d+)/),
+               date             : FW.Xpath('//div[@id="pubInfo"]').text().match(/(.*)Volume\s+\d+\s+Number\s+\d+/, 1),
+               volume           : FW.Xpath('//div[@id="pubInfo"]').text().match(/.*Volume\s+(\d+)\s+Number\s+\d+/, 1),
+               issue            : FW.Xpath('//div[@id="pubInfo"]').text().match(/.*Volume\s+\d+\s+Number\s+(\d+)/, 1),
                creators         : FW.Xpath('//div[@class="author"]/a[1]').text().cleanAuthor("author"),
                attachments      : FW.Url().makeAttachment("text/html", "DHQ Snapshot") });
 
