@@ -328,7 +328,11 @@ FW._StringMagic = function () {
 
     this.match = function(re, group) {
         if (!group) group = 1;
-        return this.addFilter(function(s) { return s.match(re)[group]; });
+        return this.addFilter(function(s) { 
+                                  var m = s.match(re);
+                                  if (m === undefined) { return undefined; }
+                                  else { return m[group]; } 
+                              });
     };
 
     this.cleanAuthor = function(type, useComma) {
@@ -380,17 +384,20 @@ FW._StringMagic = function () {
         Zotero.debug("Entering StringMagic._applyFilters");
         for (i in this._filters) {
             a = this._flatten(a);
-            /* remove undefined array entries */
-            a = a.filter(function(x) { return typeof(x) != 'undefined'; });
+            /* remove undefined or null array entries */
+            a = a.filter(function(x) { return ((x !== undefined) && (x !== null)); });
             for (var j = 0 ; j < a.length ; j++) {
                 try {
-                    if (typeof a[j] === 'undefined') { continue; }
+                    if ((a[j] === undefined) || (a[j] === null)) { continue; }
                     else { a[j] = this._filters[i](a[j], doc1); }
                 } catch (x) {
                     a[j] = undefined;
                     Zotero.debug("Caught exception " + x + "on filter: " + this._filters[i]);
                 }
             }
+            /* remove undefined or null array entries */
+            /* need this twice because they could have become undefined or null along the way */
+            a = a.filter(function(x) { return ((x !== undefined) && (x !== null)); });
         }
         return a;
     };
