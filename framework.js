@@ -516,6 +516,7 @@ FW.doWeb = function (doc, url) {
     for (var i in items) {
         items[i].complete();   
     }
+    scraper.evaluate('scraperDoneHook', doc, url);
     Zotero.debug("Leaving FW.doWeb");
 };
 
