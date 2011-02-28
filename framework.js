@@ -34,6 +34,15 @@ var FW = {
 };
 
 FW._Base = function () {
+    this.callHook = function (hookName, item, doc, url) {
+        if (typeof this['hooks'] === 'object') {
+            var hook = this['hooks'][hookName];
+            if (typeof hook === 'function') {
+                hook(item, doc, url);
+            }
+        }
+    };
+
     this.evaluateThing = function(val, doc, url) {
         var valtype = typeof val;
         if (valtype === 'string') {
@@ -514,9 +523,9 @@ FW.doWeb = function (doc, url) {
     var scraper = FW.getScraper(doc, url);
     var items = scraper.makeItems(doc, url);
     for (var i in items) {
-        items[i].complete();   
+        scraper.callHook('scraperDone', items[i], doc, url);
+        items[i].complete();
     }
-    scraper.evaluate('scraperDoneHook', doc, url);
     Zotero.debug("Leaving FW.doWeb");
 };
 
