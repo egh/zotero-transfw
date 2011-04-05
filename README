@@ -56,6 +56,18 @@ Then anything matching the regex ``/,.*$/`` is removed. Finally the
 have been multiple matches to the xpath expression) are added to the
 ``creators`` field of the generated Zotero item.
 
+Detect
+------
+
+If multiple FW.Scrapers are defined, choosing good ``detect`` criteria
+is essential. The ``detect`` field is used to decide if a scraper
+should or should be used.
+
+If the detect criteria evaluates to a non-empty array, that scraper is
+used for the page. If there is one scraper without a detect, it is
+always used. If there are multiple scrapers whose detects evaluate to
+non-empty or which have no detect, the behavior is undefined.
+
 Contact
 -------
 

@@ -6,7 +6,7 @@ INSTALL_DIR=FIXME
 all: $(FILES)
 
 clean:
-	rm $(FILES)
+	rm -f $(FILES)
 
 install: all
 	cp $(FILES) $(INSTALL_DIR)

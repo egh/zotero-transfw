@@ -1,4 +1,6 @@
 /**
+    Copyright (c) 2010, Erik Hetzner
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -13,24 +15,57 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+function flatten(a) {
+    var retval = new Array();
+    for (var i in a) {
+        var entry = a[i];
+        if (entry instanceof Array) {
+            retval = retval.concat(flatten(entry));
+        } else {
+            retval.push(entry);
+        }
+    }
+    return retval;
+}
+
 /* Generic code */
 var FW = {
     _scrapers : new Array()
 };
 
 FW._Base = function () {
-    this.evaluate = function (key, doc, url) {
-	var val = this[key];
+    this.callHook = function (hookName, item, doc, url) {
+        if (typeof this['hooks'] === 'object') {
+            var hook = this['hooks'][hookName];
+            if (typeof hook === 'function') {
+                hook(item, doc, url);
+            }
+        }
+    };
+
+    this.evaluateThing = function(val, doc, url) {
         var valtype = typeof val;
         if (valtype === 'string') {
             return val;
         } else if (valtype === 'object') {
-            return val.evaluate(doc, url);
+            if (val instanceof Array) {
+                /* map over each array val */
+                /* this.evaluate gets out of scope */
+                var parentEval = this.evaluateThing;
+                var retval = val.map ( function(i) { return parentEval (i, doc, url); } );
+                return flatten(retval);
+            } else {
+                return val.evaluate(doc, url);
+            }
         } else if (valtype === 'function') {
             return val(doc, url);
         } else {
             return undefined;
         }
+    };
+
+    this.evaluate = function (key, doc, url) {
+        return this.evaluateThing(this[key], doc, url);
     };
 };
 
@@ -43,20 +78,126 @@ FW._Scraper = function (init) {
         this[x] = init[x];
     }
 
+    this._singleFieldNames = [
+        "abstractNote",
+        "applicationNumber",
+        "archive",
+        "archiveLocation",
+        "artworkMedium",
+        "artworkSize",
+        "assignee",
+        "audioFileType",
+        "audioRecordingType",
+        "billNumber",
+        "blogTitle",
+        "bookTitle",
+        "callNumber",
+        "caseName",
+        "code",
+        "codeNumber",
+        "codePages",
+        "codeVolume",
+        "committee",
+        "company",
+        "conferenceName",
+        "country",
+        "court",
+        "date",
+        "dateDecided",
+        "dateEnacted",
+        "dictionaryTitle",
+        "distributor",
+        "docketNumber",
+        "documentNumber",
+        "DOI",
+        "edition",
+        "encyclopediaTitle",
+        "episodeNumber",
+        "extra",
+        "filingDate",
+        "firstPage",
+        "forumTitle",
+        "genre",
+        "history",
+        "institution",
+        "interviewMedium",
+        "ISBN",
+        "ISSN",
+        "issue",
+        "issueDate",
+        "issuingAuthority",
+        "journalAbbreviation",
+        "label",
+        "language",
+        "legalStatus",
+        "legislativeBody",
+        "letterType",
+        "libraryCatalog",
+        "manuscriptType",
+        "mapType",
+        "medium",
+        "meetingName",
+        "nameOfAct",
+        "network",
+        "number",
+        "numberOfVolumes",
+        "numPages",
+        "pages",
+        "patentNumber",
+        "place",
+        "postType",
+        "presentationType",
+        "priorityNumbers",
+        "proceedingsTitle",
+        "programTitle",
+        "programmingLanguage",
+        "publicLawNumber",
+        "publicationTitle",
+        "publisher",
+        "references",
+        "reportNumber",
+        "reportType",
+        "reporter",
+        "reporterVolume",
+        "rights",
+        "runningTime",
+        "scale",
+        "section",
+        "series",
+        "seriesNumber",
+        "seriesText",
+        "seriesTitle",
+        "session",
+        "shortTitle",
+        "studio",
+        "subject",
+        "system",
+        "thesisType",
+        "title",
+        "type",
+        "university",
+        "url",
+        "version",
+        "videoRecordingType",
+        "volume",
+        "websiteTitle",
+        "websiteType" ];
+
     this.makeItems = function (doc, url) {
         var item = new Zotero.Item(this.itemType);
         item.url = url;
-        var fields = new Array("abstractNote", "date", "ISSN", "issue", "publicationTitle", "section", "title", "volume");
-        for (var i in fields) {
-            var field = fields[i];
-            var fieldVal = this.evaluate(field, doc, url);
-            if (fieldVal instanceof Array) {
-                item[field] = fieldVal[0];
-            } else {
-                item[field] = fieldVal;
+        for (var i in this._singleFieldNames) {
+            var field = this._singleFieldNames[i];
+            if (this[field]) {
+                var fieldVal = this.evaluate(field, doc, url);
+                if (fieldVal instanceof Array) {
+                    item[field] = fieldVal[0];
+                } else {
+                    item[field] = fieldVal;
+                }
             }
         }
-        var multiFields = ["creators", "attachments"];
+        var multiFields = ["creators", "attachments", "tags"];
         for (var j in multiFields) {
             var key = multiFields[j];
             var val = this.evaluate(key, doc, url);
@@ -219,12 +360,16 @@ FW._StringMagic = function () {
     };
 
     this.match = function(re, group) {
-        if (!group) group = 1;
-        return this.addFilter(function(s) { return s.match(re)[group]; });
+        if (!group) group = 0;
+        return this.addFilter(function(s) { 
+                                  var m = s.match(re);
+                                  if (m === undefined) { return undefined; }
+                                  else { return m[group]; } 
+                              });
     };
 
-    this.cleanAuthor = function(type) {
-        return this.addFilter(function(s) { return Zotero.Utilities.cleanAuthor(s, type); });
+    this.cleanAuthor = function(type, useComma) {
+        return this.addFilter(function(s) { return Zotero.Utilities.cleanAuthor(s, type, useComma); });
     };
 
     this.key = function(field) {
@@ -256,33 +401,24 @@ FW._StringMagic = function () {
         return this.addFilter(filter);
     };
 
-    this._flatten = function(a) {
-        var retval = new Array();
-        for (var i in a) {
-            if (a[i] && (typeof a[i]) === 'object' && a[i].splice) { /* assume only arrays have the splice property */
-                retval = retval.concat(this._flatten(a[i]));
-            } else {
-                retval.push(a[i]);
-            }
-        }
-        return retval;
-    };
-
     this._applyFilters = function(a, doc1) {
         Zotero.debug("Entering StringMagic._applyFilters");
         for (i in this._filters) {
-            a = this._flatten(a);
-            /* remove undefined array entries */
-            a = a.filter(function(x) { return typeof(x) != 'undefined'; });
+            a = flatten(a);
+            /* remove undefined or null array entries */
+            a = a.filter(function(x) { return ((x !== undefined) && (x !== null)); });
             for (var j = 0 ; j < a.length ; j++) {
                 try {
-                    if (typeof a[j] === 'undefined') { continue; }
+                    if ((a[j] === undefined) || (a[j] === null)) { continue; }
                     else { a[j] = this._filters[i](a[j], doc1); }
                 } catch (x) {
                     a[j] = undefined;
                     Zotero.debug("Caught exception " + x + "on filter: " + this._filters[i]);
                 }
             }
+            /* remove undefined or null array entries */
+            /* need this twice because they could have become undefined or null along the way */
+            a = a.filter(function(x) { return ((x !== undefined) && (x !== null)); });
         }
         return a;
     };
@@ -390,7 +526,8 @@ FW.doWeb = function (doc, url) {
     var scraper = FW.getScraper(doc, url);
     var items = scraper.makeItems(doc, url);
     for (var i in items) {
-        items[i].complete();   
+        scraper.callHook('scraperDone', items[i], doc, url);
+        items[i].complete();
     }
     Zotero.debug("Leaving FW.doWeb");
 };

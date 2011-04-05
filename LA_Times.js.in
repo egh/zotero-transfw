@@ -22,7 +22,7 @@ FW.Scraper({ itemType         : 'newspaperArticle',
              title            : FW.Xpath('//div[@class="story"]/h1').text().trim(),
              abstractNote     : FW.Xpath('/head/meta[@name="description"]/@content').text(),
              attachments      : FW.Url().makeAttachment("text/html", "LA Times Snapshot"),
-             creators         : FW.Xpath('//div[@class="byline"]//span[@class="byline"]').text().remove(/^By /).remove(/,.*$/).cleanAuthor("author"),
+             creators         : FW.Xpath('//div[@class="byline"]//span[contains(@class, "byline")]').text().remove(/^By /).split(/,/).trim().capitalizeTitle().cleanAuthor("author"),
              date             : FW.Xpath('//div[@class="byline"]//span[@class="dateString"]').text(),
              ISSN             : "0458-3035",
              publicationTitle : "Los Angeles Times",
@@ -36,7 +36,7 @@ FW.Scraper({ itemType         : 'blogPost',
              detect           : FW.Xpath('//div[@id="blog-header"]'),
              title            : FW.Xpath('//div[@class="entry"]/h1[@class="entry-header"]').text().trim(),
              attachments      : FW.Url().makeAttachment("text/html", "LA Times Snapshot"),
-             date             : FW.Xpath('//div[@class="entry"]/div[@class="time"]').text().match(/^(.* [0-9]{4})/),
+             date             : FW.Xpath('//div[@class="entry"]/div[@class="time"]').text().match(/^(.* [0-9]{4})/, 1),
              publicationTitle : FW.Xpath('//div[@id="blog-header"]/h1').text().prepend("LA Times Blogs: ") });
 
 /** Search results
