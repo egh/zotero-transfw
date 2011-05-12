@@ -183,7 +183,7 @@ FW._Scraper = function (init) {
         "websiteTitle",
         "websiteType" ];
 
-    this.makeItems = function (doc, url) {
+    this.makeItems = function (doc, url, ignore, ret) {
         var item = new Zotero.Item(this.itemType);
         item.url = url;
         for (var i in this._singleFieldNames) {
@@ -207,7 +207,7 @@ FW._Scraper = function (init) {
                 }
             }
         }
-        return [item];
+        ret([item]);
     };
 };
 
@@ -249,12 +249,17 @@ FW._MultiScraper = function (init) {
         return attachmentsDict;
     };
 
-    this.makeItems = function(doc, url) {
+    this.makeItems = function(doc, url, ignore, ret) {
         Zotero.debug("Entering MultiScraper.makeItems");
         if (this.beforeFilter) {
             var newurl = this.beforeFilter(doc, url);
             if (newurl != url) {
-                return this.makeItems(Zotero.Utilities.retrieveDocument(url), newurl);
+                var items;
+                Zotero.Utilities.processDocument(newurl, function (doc) {
+                                                     items = this.makeItems(doc);
+                                                 },
+                                                 function () { ret(items); });
+                return;
             }
         }
         var titles = this.evaluate('titles', doc, url);
@@ -262,23 +267,31 @@ FW._MultiScraper = function (init) {
         var itemsToUse = this._selectItems(titles, urls);
         var attachments = this._mkAttachments(doc, url, urls);
         if(!itemsToUse) {
-	    Zotero.done(true);
-	    return [];
+	    ret([]);
 	} else {
-            var madeItems = new Array();
-            for (var i in itemsToUse) {
-                var url1 = itemsToUse[i];
-                var doc1 = Zotero.Utilities.retrieveDocument(url1);
-                var itemTrans;
-                if (this.itemTrans) {
-                    itemTrans = this.itemTrans;                    
-                } else {
-                    itemTrans = FW.getScraper(doc1, url1);                    
+            var items = [];
+            var parentItemTrans = this.itemTrans;
+            var handleDoc = function (doc1) {
+                var url1 = doc1.documentURI;
+                var itemTrans = parentItemTrans;
+                if (itemTrans === undefined) {
+                    itemTrans = FW.getScraper(doc1, url1);
                 }
-                var items = itemTrans.makeItems(doc1, url1, attachments[url1]);
-                madeItems.push(items[0]);
-            }
-            return madeItems;
+                if (itemTrans === undefined) {
+                    /* nothing to do */
+                } else {
+                    itemTrans.makeItems(doc1, url1, attachments[url1],
+                                        function (items1) {
+                                            items.push(items1[0]);
+                                        });
+                }
+                /* never returns */
+            };
+            Zotero.Utilities.processDocuments(itemsToUse, 
+                                              handleDoc,
+                                              function () {
+                                                  ret(items);
+                                              });
         }
     };
 };
@@ -297,19 +310,22 @@ FW._DelegateTranslator = function (init) {
     this._translator = Zotero.loadTranslator(this.translatorType);
     this._translator.setTranslator(this.translatorId);
     
-    this.makeItems = function(doc, url, attachments) {
+    this.makeItems = function(doc, url, attachments, ret) {
         Zotero.debug("Entering DelegateTranslator.makeItems");
         var tmpItem;
-        var text = Zotero.Utilities.retrieveSource(url);
-        this._translator.setHandler("itemDone", function(obj, item) { 
-                                        tmpItem = item;
-                                        /* this does not seem to be working */
-                                        if (attachments) { item.attachments = attachments; }
+        Zotero.Utilities.HTTP.doGet(url,
+                                    function (text) {
+                                        this._translator.setHandler("itemDone", function(obj, item) { 
+                                                                        tmpItem = item;
+                                                                        /* this does not seem to be working */
+                                                                        if (attachments) { item.attachments = attachments; }
+                                                                    });
+	                                this._translator.setString(text);
+                                        this._translator.translate();
+                                    },
+                                    function () {
+                                        ret([tmpItem]);
                                     });
-	this._translator.setString(text);
-        this._translator.translate();
-        Zotero.debug("Leaving DelegateTranslator.makeItems");
-        return [tmpItem];
     };
 };
 
@@ -524,11 +540,15 @@ FW.getScraper = function (doc, url) {
 FW.doWeb = function (doc, url) {
     Zotero.debug("Entering FW.doWeb");
     var scraper = FW.getScraper(doc, url);
-    var items = scraper.makeItems(doc, url);
-    for (var i in items) {
-        scraper.callHook('scraperDone', items[i], doc, url);
-        items[i].complete();
-    }
+    scraper.makeItems(doc, url, [], 
+                      function(items) {
+                          for (var i in items) {
+                              scraper.callHook('scraperDone', items[i], doc, url);
+                              items[i].complete();
+                          }
+                          Zotero.done();
+                      });
+    Zotero.wait();
     Zotero.debug("Leaving FW.doWeb");
 };
 
