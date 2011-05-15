@@ -182,6 +182,39 @@ FW._Scraper = function (init) {
         "volume",
         "websiteTitle",
         "websiteType" ];
+    
+    this._makeAttachments = function(doc, url, config, item) {
+        if (config instanceof Array) {
+            config.forEach(function (child) { this._makeAttachments(doc, url, child, item); }, this);
+        } else if (typeof config === 'object') {
+            /* plural or singual */
+            var urlsFilter = config["urls"] || config["url"];
+            var typesFilter = config["types"] || config["type"];
+            var titlesFilter = config["titles"] || config["title"];
+
+            var attachUrls = this.evaluateThing(urlsFilter, doc, url);
+            var attachTitles = this.evaluateThing(titlesFilter, doc, url);
+            var attachTypes = this.evaluateThing(typesFilter, doc, url);
+
+            var typesIsArray = (attachTypes instanceof Array);
+            var titlesIsArray = (attachTitles instanceof Array);
+            if (!(attachUrls instanceof Array)) {
+                attachUrls = [attachUrls];
+            }
+            for (var k in attachUrls) {
+                var attachUrl = attachUrls[k];
+                var attachType;
+                var attachTitle;
+                if (typesIsArray) { attachType = attachTypes[k]; }
+                else { attachType = attachTypes; }
+                if (titlesIsArray) { attachTitle = attachTitles[k]; }
+                else { attachTitle = attachTitles; }
+                item["attachments"].push({ 'url':   attachUrl,
+                                           'title': attachTitle,
+                                           'type':  attachType });
+            }
+        }
+    };
 
     this.makeItems = function (doc, url, ignore, ret) {
         var item = new Zotero.Item(this.itemType);
@@ -197,7 +230,7 @@ FW._Scraper = function (init) {
                 }
             }
         }
-        var multiFields = ["creators", "attachments", "tags"];
+        var multiFields = ["creators", "tags"];
         for (var j in multiFields) {
             var key = multiFields[j];
             var val = this.evaluate(key, doc, url);
@@ -207,6 +240,7 @@ FW._Scraper = function (init) {
                 }
             }
         }
+        this._makeAttachments(doc, url, this["attachments"], item);
         ret([item]);
     };
 };
@@ -249,6 +283,35 @@ FW._MultiScraper = function (init) {
         return attachmentsDict;
     };
 
+    /* This logic is very similar to that used by _makeAttachments in
+     * a normal scraper, but abstracting it out would not achieve much
+     * and would complicate it. */
+    this._makeChoices = function(config, doc, url, choiceTitles, choiceUrls) {
+        if (config instanceof Array) {
+            config.forEach(function (child) { this._makeTitlesUrls(child, doc, url, choiceTitles, choiceUrls); }, this);
+        } else if (typeof config === 'object') {
+            /* plural or singual */
+            var urlsFilter = config["urls"] || config["url"];
+            var titlesFilter = config["titles"] || config["title"];
+
+            var urls = this.evaluateThing(urlsFilter, doc, url);
+            var titles = this.evaluateThing(titlesFilter, doc, url);
+
+            var titlesIsArray = (titles instanceof Array);
+            if (!(urls instanceof Array)) {
+                urls = [urls];
+            }
+            for (var k in urls) {
+                var myUrl = urls[k];
+                var myTitle;
+                if (titlesIsArray) { myTitle = titles[k]; }
+                else { myTitle = titles; }
+                choiceUrls.push(myUrl);
+                choiceTitles.push(myTitle);
+            }
+        }
+    };
+
     this.makeItems = function(doc, url, ignore, ret) {
         Zotero.debug("Entering MultiScraper.makeItems");
         if (this.beforeFilter) {
@@ -262,8 +325,9 @@ FW._MultiScraper = function (init) {
                 return;
             }
         }
-        var titles = this.evaluate('titles', doc, url);
-        var urls = this.evaluate('urls', doc, url);
+        var titles = [];
+        var urls = [];
+        this._makeChoices(this["choices"], doc, url, titles, urls);
         var itemsToUse = this._selectItems(titles, urls);
         var attachments = this._mkAttachments(doc, url, urls);
         if(!itemsToUse) {
@@ -402,19 +466,6 @@ FW._StringMagic = function () {
 
     this.unescape = function() {
         return this.addFilter(function(s) { return unescape(s); });
-    };
-
-    this.makeAttachment = function(type, title) {
-        var filter = function(url) {
-            if (url) {
-                return { url   : url,
-                         type  : type,
-                         title : title };
-            } else {
-                return undefined;
-            }
-        };
-        return this.addFilter(filter);
     };
 
     this._applyFilters = function(a, doc1) {

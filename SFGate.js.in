@@ -17,18 +17,34 @@ function detectWeb(doc, url) { return FW.detectWeb(doc, url); }
 function doWeb(doc, url) { return FW.doWeb(doc, url); }
 
 /* Basic */
-FW.Scraper({ itemType         : 'newspaperArticle',
-             detect           : FW.Xpath('//div[@class="articleheadings"]'),
-             title            : FW.Xpath('//head/meta[@name="title"]/@content').text(),
-             attachments      : FW.Url().makeAttachment("text/html", "SFGate Snapshot"),
-             creators         : FW.Xpath('//div[@class="articleheadings"]//p[@class="byline author vcard"]').
-               text().remove(/,.*$/).remove(/^By/).trim().capitalizeTitle().cleanAuthor("author"),
-             date             : FW.Xpath('//div[@class="articleheadings"]//p[@class="date"]').text(),
-             ISSN             : "1932-8672",
-             publicationTitle : "San Francisco Chronicle" });
+FW.Scraper({
+  itemType         : 'newspaperArticle',
+  detect           : FW.Xpath('//div[@class="articleheadings"]'),
+  title            : FW.Xpath('//head/meta[@name="title"]/@content').text(),
+  creators         : FW.Xpath('//div[@class="articleheadings"]//p[@class="byline author vcard"]').text().
+                       remove(/,.*$/).
+                       remove(/^By/).
+                       trim().
+                       capitalizeTitle().
+                       cleanAuthor("author"),
+  date             : FW.Xpath('//div[@class="articleheadings"]//p[@class="date"]').text(),
+  ISSN             : "1932-8672",
+  publicationTitle : "San Francisco Chronicle",
+  attachments      : {
+    url            : FW.Url(),
+    type           : "text/html",
+    title          : "SFGate Snapshot"
+  }
+});
 
 /* Search results */
-FW.MultiScraper({ itemType  : "multiple",
-                  detect    : FW.Xpath('//div[@class="results_site"]'),
-                  titles    : FW.Xpath('//div[@class="results_site"]//div[@class="item clearfix"]/h4').text().trim(),
-                  urls      : FW.Xpath('//div[@class="results_site"]//div[@class="item clearfix"]/h4/a').key('href').text() });
+FW.MultiScraper({
+  itemType  : "multiple",
+  detect    : FW.Xpath('//div[@class="results_site"]'),
+  choices   : {
+    titles  : FW.Xpath('//div[@class="results_site"]//div[@class="item clearfix"]/h4').text().
+                trim(),
+    urls    : FW.Xpath('//div[@class="results_site"]//div[@class="item clearfix"]/h4/a').
+                key('href').text()
+  }
+});

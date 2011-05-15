@@ -17,16 +17,35 @@ function detectWeb(doc, url) { return FW.detectWeb(doc, url); }
 
 function doWeb(doc, url) { return FW.doWeb(doc, url); }
 
-FW.Scraper({ itemType         : 'newspaperArticle',
-             publicationTitle : "wsj.com",
-             creators         : FW.PageText().match(/authors:'(.*?)'(?=,|})/, 1).
-	       replace("+", " ", "g").unescapeHTML().unescape().split(/,/).cleanAuthor("author"),
-	     abstractNote     : FW.PageText().match(/bodyText:'(.*?)'(?=,|})/, 1).
-	       replace("+", " ", "g").unescapeHTML().unescape(),
-	     date             : FW.PageText().match(/publicationDate:'(.*?)'(?=,|})/, 1).
-	       replace("+", " ", "g").unescapeHTML().unescape(),
-	     title            : FW.PageText().match(/articleHeadline:'(.*?)'(?=,|})/, 1).
-	       replace("+", " ", "g").unescapeHTML().unescape().replace(/\\/, ""),
-	     section          : FW.PageText().match(/articleType:'(.*?)'(?=,|})/, 1).
-	       replace("+", " ", "g").unescapeHTML().unescape(),
-	     attachments      : FW.Url().makeAttachment("text/html", "Wall Street Journal Snapshot") });
+FW.Scraper({ 
+  itemType         : 'newspaperArticle',
+  publicationTitle : "wsj.com",
+  creators         : FW.PageText().match(/authors:'(.*?)'(?=,|})/, 1).
+                       replace("+", " ", "g").
+                       unescapeHTML().
+                       unescape().
+                       split(/,/).
+                       cleanAuthor("author"),
+  abstractNote     : FW.PageText().match(/bodyText:'(.*?)'(?=,|})/, 1).
+                       replace("+", " ", "g").
+                       unescapeHTML().
+                       unescape(),
+  date             : FW.PageText().match(/publicationDate:'(.*?)'(?=,|})/, 1).
+                       replace("+", " ", "g").
+                       unescapeHTML().
+                       unescape(),
+  title            : FW.PageText().match(/articleHeadline:'(.*?)'(?=,|})/, 1).
+                       replace("+", " ", "g").
+                       unescapeHTML().
+                       unescape().
+                       replace(/\\/, ""),
+  section          : FW.PageText().match(/articleType:'(.*?)'(?=,|})/, 1).
+                       replace("+", " ", "g").
+                       unescapeHTML().
+                       unescape(),
+  attachments      : {
+    url            : FW.Url(),
+    type           : "text/html",
+    title          : "Wall Street Journal Snapshot"
+  }
+});
