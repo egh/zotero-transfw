@@ -590,7 +590,7 @@ FW.doWeb = function (doc, url) {
                       function(item) {
                           scraper.callHook('scraperDone', item, doc, url);
                           if (!item['title']) {
-                              item['title'] = "[Unknown]";
+                              item['title'] = "";
                           }
                           item.complete();
                       },
