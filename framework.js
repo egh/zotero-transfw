@@ -212,7 +212,7 @@ FW._Scraper = function (init) {
         }
     };
 
-    this.makeItems = function (doc, url, ignore, ret) {
+    this.makeItems = function (doc, url, ignore, eachItem, ret) {
         var item = new Zotero.Item(this.itemType);
         item.url = url;
         for (var i in this._singleFieldNames) {
@@ -237,6 +237,7 @@ FW._Scraper = function (init) {
             }
         }
         this._makeAttachments(doc, url, this["attachments"], item);
+        eachItem(item);
         ret([item]);
     };
 };
@@ -308,16 +309,12 @@ FW._MultiScraper = function (init) {
         }
     };
 
-    this.makeItems = function(doc, url, ignore, ret) {
+    this.makeItems = function(doc, url, ignore, eachItem, ret) {
         Zotero.debug("Entering MultiScraper.makeItems");
         if (this.beforeFilter) {
             var newurl = this.beforeFilter(doc, url);
             if (newurl != url) {
-                var items;
-                Zotero.Utilities.processDocument(newurl, function (doc) {
-                                                     items = this.makeItems(doc);
-                                                 },
-                                                 function () { ret(items); });
+                this.makeItems(doc, newurl, ignore, eachItem, ret);
                 return;
             }
         }
@@ -331,27 +328,28 @@ FW._MultiScraper = function (init) {
 	} else {
             var items = [];
             var parentItemTrans = this.itemTrans;
-            var handleDoc = function (doc1) {
-                var url1 = doc1.documentURI;
-                var itemTrans = parentItemTrans;
-                if (itemTrans === undefined) {
-                    itemTrans = FW.getScraper(doc1, url1);
-                }
-                if (itemTrans === undefined) {
-                    /* nothing to do */
-                } else {
-                    itemTrans.makeItems(doc1, url1, attachments[url1],
-                                        function (items1) {
-                                            items.push(items1[0]);
-                                        });
-                }
-                /* never returns */
-            };
-            Zotero.Utilities.processDocuments(itemsToUse, 
-                                              handleDoc,
-                                              function () {
-                                                  ret(items);
-                                              });
+            Zotero.Utilities.processDocuments(itemsToUse,
+              function (doc1) {
+                  var url1 = doc1.documentURI;
+                  var itemTrans = parentItemTrans;
+                  if (itemTrans === undefined) {
+                      itemTrans = FW.getScraper(doc1, url1);
+                  }
+                  if (itemTrans === undefined) {
+                      /* nothing to do */
+                  } else {
+                      itemTrans.makeItems(doc1, url1, attachments[url1],
+                                          function (item1) {
+                                              Zotero.debug("YAR!!!");
+                                              items.push(item1);
+                                              eachItem(item1);
+                                          }, 
+                                          function() {});
+                  }
+              },
+              function () {
+                  ret(items);
+              });
         }
     };
 };
@@ -370,7 +368,7 @@ FW._DelegateTranslator = function (init) {
     this._translator = Zotero.loadTranslator(this.translatorType);
     this._translator.setTranslator(this.translatorId);
     
-    this.makeItems = function(doc, url, attachments, ret) {
+    this.makeItems = function(doc, url, attachments, eachItem, ret) {
         Zotero.debug("Entering DelegateTranslator.makeItems");
         var tmpItem;
         Zotero.Utilities.HTTP.doGet(url,
@@ -382,6 +380,7 @@ FW._DelegateTranslator = function (init) {
                                                                     });
 	                                this._translator.setString(text);
                                         this._translator.translate();
+                                        eachItem(tmpItem);
                                     },
                                     function () {
                                         ret([tmpItem]);
@@ -588,14 +587,14 @@ FW.doWeb = function (doc, url) {
     Zotero.debug("Entering FW.doWeb");
     var scraper = FW.getScraper(doc, url);
     scraper.makeItems(doc, url, [], 
-                      function(items) {
-                          for (var i in items) {
-                              if (!items[i]['title']) {
-                                  items[i]['title'] = "[Unknown]";
-                              }
-                              scraper.callHook('scraperDone', items[i], doc, url);
-                              items[i].complete();
+                      function(item) {
+                          scraper.callHook('scraperDone', item, doc, url);
+                          if (!item['title']) {
+                              item['title'] = "[Unknown]";
                           }
+                          item.complete();
+                      },
+                      function() {
                           Zotero.done();
                       });
     Zotero.wait();
