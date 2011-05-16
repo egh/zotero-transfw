@@ -594,6 +594,9 @@ FW.doWeb = function (doc, url) {
     scraper.makeItems(doc, url, [], 
                       function(items) {
                           for (var i in items) {
+                              if (!items[i]['title']) {
+                                  items[i]['title'] = "[Unknown]";
+                              }
                               scraper.callHook('scraperDone', items[i], doc, url);
                               items[i].complete();
                           }
