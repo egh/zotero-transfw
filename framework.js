@@ -63,10 +63,6 @@ FW._Base = function () {
             return undefined;
         }
     };
-
-    this.evaluate = function (key, doc, url) {
-        return this.evaluateThing(this[key], doc, url);
-    };
 };
 
 FW.Scraper = function (init) { 
@@ -222,7 +218,7 @@ FW._Scraper = function (init) {
         for (var i in this._singleFieldNames) {
             var field = this._singleFieldNames[i];
             if (this[field]) {
-                var fieldVal = this.evaluate(field, doc, url);
+                var fieldVal = this.evaluateThing(this[field], doc, url);
                 if (fieldVal instanceof Array) {
                     item[field] = fieldVal[0];
                 } else {
@@ -233,7 +229,7 @@ FW._Scraper = function (init) {
         var multiFields = ["creators", "tags"];
         for (var j in multiFields) {
             var key = multiFields[j];
-            var val = this.evaluate(key, doc, url);
+            var val = this.evaluateThing(this[key], doc, url);
             if (val) {
                 for (var k in val) {
                     item[key].push(val[k]);
@@ -273,7 +269,7 @@ FW._MultiScraper = function (init) {
     };
 
     this._mkAttachments = function(doc, url, urls) {
-        var attachmentsArray = this.evaluate('attachments', doc, url);
+        var attachmentsArray = this.evaluateThing(this['attachments'], doc, url);
         var attachmentsDict = new Object();
         if (attachmentsArray) {
             for (var i in urls) {
@@ -567,11 +563,11 @@ FW._Xpath.prototype = new FW._StringMagic();
 FW.detectWeb = function (doc, url) {
     for (var i in FW._scrapers) {
 	var scraper = FW._scrapers[i];
-	var itemType = scraper.evaluate('itemType', doc, url);
+	var itemType = scraper.evaluateThing(scraper['itemType'], doc, url);
 	if (!scraper.detect) {
 	    return itemType;
 	} else {
-	    var v = scraper.evaluate('detect', doc, url);
+	    var v = scraper.evaluateThing(scraper['detect'], doc, url);
             if (v.length > 0 && v[0]) {
 		return itemType;
 	    }
@@ -583,8 +579,8 @@ FW.detectWeb = function (doc, url) {
 FW.getScraper = function (doc, url) {
     var itemType = FW.detectWeb(doc, url);
     return FW._scrapers.filter(function(s) {
-        return (s.evaluate('itemType', doc, url) == itemType)
-		&& (s.evaluate('detect', doc, url))
+        return (s.evaluateThing(s['itemType'], doc, url) == itemType)
+		&& (s.evaluateThing(s['detect'], doc, url))
     })[0];
 };
 
