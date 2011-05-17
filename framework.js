@@ -340,7 +340,6 @@ FW._MultiScraper = function (init) {
                   } else {
                       itemTrans.makeItems(doc1, url1, attachments[url1],
                                           function (item1) {
-                                              Zotero.debug("YAR!!!");
                                               items.push(item1);
                                               eachItem(item1);
                                           }, 
@@ -464,7 +463,6 @@ FW._StringMagic = function () {
     };
 
     this._applyFilters = function(a, doc1) {
-        Zotero.debug("Entering StringMagic._applyFilters");
         for (i in this._filters) {
             a = flatten(a);
             /* remove undefined or null array entries */
