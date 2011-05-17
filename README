@@ -34,7 +34,12 @@ boilerplate, you will see a Javascript object that looks like::
     creators         : 
       FW.Xpath('//div[@class="articleheadings"]//p[@class="byline author vcard"]').
         text().remove(/,.*$/).cleanAuthor("author"),
-    attachments      : FW.Url().makeAttachment("text/html", "SFGate Snapshot") }
+    attachments      : {
+      url            : FW.Url(),
+      title          : "SFGate Snapshot",
+      type           : "text/html"
+    }
+  }
 
 Each key, e.g., ``itemType`` or ``title``, is generally a Zotero
 metadata field. Each value is either a string, in which case it never
