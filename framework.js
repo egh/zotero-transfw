@@ -437,7 +437,7 @@ FW._StringMagic = function () {
         if (!group) group = 0;
         return this.addFilter(function(s) { 
                                   var m = s.match(re);
-                                  if (m === undefined) { return undefined; }
+                                  if (m === undefined || m === null) { return undefined; }
                                   else { return m[group]; } 
                               });
     };
