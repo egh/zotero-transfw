@@ -238,7 +238,7 @@ FW._Scraper = function (init) {
             }
         }
         this._makeAttachments(doc, url, this["attachments"], item);
-        eachItem(item);
+        eachItem(item, this, doc, url);
         ret([item]);
     };
 };
@@ -342,7 +342,7 @@ FW._MultiScraper = function (init) {
                       itemTrans.makeItems(doc1, url1, attachments[url1],
                                           function (item1) {
                                               items.push(item1);
-                                              eachItem(item1);
+                                              eachItem(item1, itemTrans, doc1, url1);
                                           }, 
                                           function() {});
                   }
@@ -586,7 +586,7 @@ FW.doWeb = function (doc, url) {
     Zotero.debug("Entering FW.doWeb");
     var scraper = FW.getScraper(doc, url);
     scraper.makeItems(doc, url, [], 
-                      function(item) {
+                      function(item, scraper, doc, url) {
                           scraper.callHook('scraperDone', item, doc, url);
                           if (!item['title']) {
                               item['title'] = "";
