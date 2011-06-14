@@ -262,12 +262,14 @@ FW._MultiScraper = function (init) {
         return items;
     };
 
-    this._selectItems = function(titles, urls) {
+    this._selectItems = function(titles, urls, callback) {
         var items = new Array();
-        for (var j in Zotero.selectItems(this._mkSelectItems(titles, urls))) {
-            items.push(j);
-        }
-       return items;
+	Zotero.selectItems(this._mkSelectItems(titles, urls), function (chosen) {
+			for (var j in chosen) {
+				items.push(j);
+			}
+			callback(items);
+	});
     };
 
     this._mkAttachments = function(doc, url, urls) {
@@ -322,35 +324,38 @@ FW._MultiScraper = function (init) {
         var titles = [];
         var urls = [];
         this._makeChoices(this["choices"], doc, url, titles, urls);
-        var itemsToUse = this._selectItems(titles, urls);
         var attachments = this._mkAttachments(doc, url, urls);
-        if(!itemsToUse) {
-	    ret([]);
-	} else {
-            var items = [];
-            var parentItemTrans = this.itemTrans;
-            Zotero.Utilities.processDocuments(itemsToUse,
-              function (doc1) {
-                  var url1 = doc1.documentURI;
-                  var itemTrans = parentItemTrans;
-                  if (itemTrans === undefined) {
-                      itemTrans = FW.getScraper(doc1, url1);
-                  }
-                  if (itemTrans === undefined) {
-                      /* nothing to do */
-                  } else {
-                      itemTrans.makeItems(doc1, url1, attachments[url1],
-                                          function (item1) {
-                                              items.push(item1);
-                                              eachItem(item1, itemTrans, doc1, url1);
-                                          }, 
-                                          function() {});
-                  }
-              },
-              function () {
-                  ret(items);
-              });
-        }
+        
+	this._selectItems(titles, urls, function (itemsToUse) {
+		if(!itemsToUse) {
+			ret([]);
+		} else {
+			var items = [];
+			var parentItemTrans = this.itemTrans;
+			Zotero.Utilities.processDocuments(itemsToUse,
+				function (doc1) {
+					var url1 = doc1.documentURI;
+					var itemTrans = parentItemTrans;
+					if (itemTrans === undefined) {
+						itemTrans = FW.getScraper(doc1, url1);
+					}
+					if (itemTrans === undefined) {
+					/* nothing to do */
+					} else {
+					itemTrans.makeItems(doc1, url1, attachments[url1],
+						function (item1) {
+							items.push(item1);
+							eachItem(item1, itemTrans, doc1, url1);
+						}, 
+						function() {});
+					}
+				},
+				function () {
+					ret(items);
+				}
+			);
+		}
+	});
     };
 };
 
