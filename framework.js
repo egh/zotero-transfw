@@ -567,13 +567,9 @@ FW.detectWeb = function (doc, url) {
     for (var i in FW._scrapers) {
 	var scraper = FW._scrapers[i];
 	var itemType = scraper.evaluateThing(scraper['itemType'], doc, url);
-	if (!scraper.detect) {
+	var v = scraper.evaluateThing(scraper['detect'], doc, url);
+        if (v.length > 0 && v[0]) {
 	    return itemType;
-	} else {
-	    var v = scraper.evaluateThing(scraper['detect'], doc, url);
-            if (v.length > 0 && v[0]) {
-		return itemType;
-	    }
 	}
     }
     return undefined;
