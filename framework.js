@@ -29,7 +29,6 @@ function flatten(a) {
     return retval;
 }
 
-/* Generic code */
 var FW = {
     _scrapers : new Array()
 };
@@ -600,5 +599,3 @@ FW.doWeb = function (doc, url) {
     Zotero.wait();
     Zotero.debug("Leaving FW.doWeb");
 };
-
-/* End generic code */
