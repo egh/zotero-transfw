@@ -312,7 +312,6 @@ FW._MultiScraper = function (init) {
     };
 
     this.makeItems = function(doc, url, ignore, eachItem, ret) {
-        Zotero.debug("Entering MultiScraper.makeItems");
         if (this.beforeFilter) {
             var newurl = this.beforeFilter(doc, url);
             if (newurl != url) {
@@ -373,7 +372,6 @@ FW._DelegateTranslator = function (init) {
     this._translator.setTranslator(this.translatorId);
     
     this.makeItems = function(doc, url, attachments, eachItem, ret) {
-        Zotero.debug("Entering DelegateTranslator.makeItems");
         var tmpItem;
         Zotero.Utilities.HTTP.doGet(url,
                                     function (text) {
@@ -583,7 +581,6 @@ FW.getScraper = function (doc, url) {
 };
 
 FW.doWeb = function (doc, url) {
-    Zotero.debug("Entering FW.doWeb");
     var scraper = FW.getScraper(doc, url);
     scraper.makeItems(doc, url, [], 
                       function(item, scraper, doc, url) {
@@ -597,5 +594,4 @@ FW.doWeb = function (doc, url) {
                           Zotero.done();
                       });
     Zotero.wait();
-    Zotero.debug("Leaving FW.doWeb");
 };
