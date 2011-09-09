@@ -548,13 +548,21 @@ FW._Xpath = function (_xpath) {
     };
 
     this.evaluate = function (doc) {
-        var it = doc.evaluate(this._xpath, doc, null, XPathResult.ANY_TYPE, null);
-        var a = new Array();
-        var x;
-        while (x = it.iterateNext()) { a.push(x); }
-        a = this._applyFilters(a, doc);
-        if (a.length == 0) { return false; }
-        else { return a; }
+        var res = doc.evaluate(this._xpath, doc, null, XPathResult.ANY_TYPE, null);
+        var resultType = res.resultType;
+        if (resultType == XPathResult.STRING_TYPE) {
+            return res.stringValue;
+        } else if (resultType == XPathResult.ORDERED_NODE_ITERATOR_TYPE ||
+                   resultType == XPathResult.UNORDERED_NODE_ITERATOR_TYPE) {
+            var a = new Array();
+            var x;
+            while ((x = res.iterateNext())) { a.push(x); }
+            a = this._applyFilters(a, doc);
+            if (a.length == 0) { return false; }
+            else { return a; }
+        } else {
+            return [];
+        }
     };
 };
 
