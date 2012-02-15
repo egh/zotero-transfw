@@ -45,9 +45,7 @@ FW._Base = function () {
 
     this.evaluateThing = function(val, doc, url) {
         var valtype = typeof val;
-        if (valtype === 'string') {
-            return val;
-        } else if (valtype === 'object') {
+        if (valtype === 'object') {
             if (val instanceof Array) {
                 /* map over each array val */
                 /* this.evaluate gets out of scope */
@@ -60,7 +58,7 @@ FW._Base = function () {
         } else if (valtype === 'function') {
             return val(doc, url);
         } else {
-            return undefined;
+            return val;
         }
     };
 };
@@ -187,13 +185,13 @@ FW._Scraper = function (init) {
             var urlsFilter = config["urls"] || config["url"];
             var typesFilter = config["types"] || config["type"];
             var titlesFilter = config["titles"] || config["title"];
+            var snapshotsFilter = config["snapshots"] || config["snapshot"];
 
             var attachUrls = this.evaluateThing(urlsFilter, doc, url);
             var attachTitles = this.evaluateThing(titlesFilter, doc, url);
             var attachTypes = this.evaluateThing(typesFilter, doc, url);
+            var attachSnapshots = this.evaluateThing(snapshotsFilter, doc, url);
 
-            var typesIsArray = (attachTypes instanceof Array);
-            var titlesIsArray = (attachTitles instanceof Array);
             if (!(attachUrls instanceof Array)) {
                 attachUrls = [attachUrls];
             }
@@ -201,13 +199,20 @@ FW._Scraper = function (init) {
                 var attachUrl = attachUrls[k];
                 var attachType;
                 var attachTitle;
-                if (typesIsArray) { attachType = attachTypes[k]; }
+                var attachSnapshot;
+                if (attachTypes instanceof Array) { attachType = attachTypes[k]; }
                 else { attachType = attachTypes; }
-                if (titlesIsArray) { attachTitle = attachTitles[k]; }
+
+                if (attachTitles instanceof Array) { attachTitle = attachTitles[k]; }
                 else { attachTitle = attachTitles; }
-                item["attachments"].push({ 'url':   attachUrl,
-                                           'title': attachTitle,
-                                           'type':  attachType });
+
+                if (attachSnapshots instanceof Array) { attachSnapshot = attachSnapshots[k]; }
+                else { attachSnapshot = attachSnapshots; }
+
+                item["attachments"].push({ url      : attachUrl,
+                                           title    : attachTitle,
+                                           type     : attachType,
+                                           snapshot : attachSnapshot });
             }
         }
     };
