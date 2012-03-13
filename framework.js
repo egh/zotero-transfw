@@ -488,7 +488,7 @@ FW._StringMagic = function () {
             /* need this twice because they could have become undefined or null along the way */
             a = a.filter(function(x) { return ((x !== undefined) && (x !== null)); });
         }
-        return a;
+        return flatten(a);
     };
 };
 
