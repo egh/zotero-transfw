@@ -558,6 +558,10 @@ FW._Xpath = function (_xpath) {
         var a = new Array();
         if (resultType == XPathResult.STRING_TYPE) {
             a.push(res.stringValue);
+        } else if (resultType == XPathResult.BOOLEAN_TYPE) {
+            a.push(res.booleanValue);
+        } else if (resultType == XPathResult.NUMBER_TYPE) {
+            a.push(res.numberValue);
         } else if (resultType == XPathResult.ORDERED_NODE_ITERATOR_TYPE ||
                    resultType == XPathResult.UNORDERED_NODE_ITERATOR_TYPE) {
             var x;
