@@ -377,15 +377,16 @@ FW._WebDelegateTranslator = function (init) {
         this[x] = init[x];
     }
     this.makeItems = function(doc, url, attachments, eachItem, ret) {
+        // need for scoping
+        var parentThis = this;
+
         var translator = Zotero.loadTranslator("web");
         translator.setTranslator(this.translatorId);
-        var tmpItem;
         translator.setHandler("itemDone", function(obj, item) { 
-            tmpItem = item;
+            eachItem(item, parentThis, doc, url);
         });
         translator.setDocument(doc);
         translator.translate();
-        eachItem(tmpItem, this, doc, url);
         ret();
     };
 };
