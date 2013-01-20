@@ -368,38 +368,29 @@ FW._MultiScraper = function (init) {
 
 FW._MultiScraper.prototype = new FW._Base;
 
-FW.DelegateTranslator = function (init) { 
-    return new FW._DelegateTranslator(init);
+FW.WebDelegateTranslator = function (init) { 
+    return new FW._WebDelegateTranslator(init);
 };
 
-FW._DelegateTranslator = function (init) {
+FW._WebDelegateTranslator = function (init) {
     for (x in init) {
         this[x] = init[x];
     }
-    
-    this._translator = Zotero.loadTranslator(this.translatorType);
-    this._translator.setTranslator(this.translatorId);
-    
     this.makeItems = function(doc, url, attachments, eachItem, ret) {
+        var translator = Zotero.loadTranslator("web");
+        translator.setTranslator(this.translatorId);
         var tmpItem;
-        Zotero.Utilities.HTTP.doGet(url,
-                                    function (text) {
-                                        this._translator.setHandler("itemDone", function(obj, item) { 
-                                                                        tmpItem = item;
-                                                                        /* this does not seem to be working */
-                                                                        if (attachments) { item.attachments = attachments; }
-                                                                    });
-	                                this._translator.setString(text);
-                                        this._translator.translate();
-                                        eachItem(tmpItem);
-                                    },
-                                    function () {
-                                        ret();
-                                    });
+        translator.setHandler("itemDone", function(obj, item) { 
+            tmpItem = item;
+        });
+        translator.setDocument(doc);
+        translator.translate();
+        eachItem(tmpItem, this, doc, url);
+        ret();
     };
 };
 
-FW.DelegateTranslator.prototype = new FW._Scraper;
+FW._WebDelegateTranslator.prototype = new FW._Base;
 
 FW._StringMagic = function () {
     this._filters = new Array();
