@@ -282,10 +282,10 @@ FW._MultiScraper = function (init) {
     this._selectItems = function(titles, urls, callback) {
         var items = new Array();
 	Zotero.selectItems(this._mkSelectItems(titles, urls), function (chosen) {
-			for (var j in chosen) {
-				items.push(j);
-			}
-			callback(items);
+	    for (var j in chosen) {
+		items.push(j);
+	    }
+	    callback(items);
 	});
     };
 
