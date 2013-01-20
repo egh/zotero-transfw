@@ -256,7 +256,7 @@ FW._Scraper = function (init) {
         }
         this._makeAttachments(doc, url, this["attachments"], item);
         eachItem(item, this, doc, url);
-        ret([item]);
+        ret();
     };
 };
 
@@ -345,7 +345,7 @@ FW._MultiScraper = function (init) {
         
 	this._selectItems(titles, urls, function (itemsToUse) {
 		if(!itemsToUse) {
-			ret([]);
+			ret();
 		} else {
 			var items = [];
 			Zotero.Utilities.processDocuments(itemsToUse,
@@ -367,7 +367,7 @@ FW._MultiScraper = function (init) {
 					}
 				},
 				function () {
-					ret(items);
+					ret();
 				}
 			);
 		}
@@ -403,7 +403,7 @@ FW._DelegateTranslator = function (init) {
                                         eachItem(tmpItem);
                                     },
                                     function () {
-                                        ret([tmpItem]);
+                                        ret();
                                     });
     };
 };
