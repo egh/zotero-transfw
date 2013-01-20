@@ -384,12 +384,23 @@ FW._WebDelegateTranslator = function (init) {
         var parentThis = this;
 
         var translator = Zotero.loadTranslator("web");
-        translator.setTranslator(this.translatorId);
         translator.setHandler("itemDone", function(obj, item) { 
             eachItem(item, parentThis, doc, url);
         });
         translator.setDocument(doc);
-        translator.translate();
+
+        if (this.translatorId) {
+            translator.setTranslator(this.translatorId);
+            translator.translate();
+        } else {
+            translator.setHandler("translators", function(obj, translators) {
+                if (translators.length) {
+                    translator.setTranslator(translators);
+                    this.translate();
+                }
+            });
+            translator.getTranslators();
+        }
         ret();
     };
 };
