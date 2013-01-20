@@ -341,36 +341,27 @@ FW._MultiScraper = function (init) {
         var urls = [];
         this._makeChoices(this["choices"], doc, url, titles, urls);
         var attachments = this._mkAttachments(doc, url, urls);
-	var parentItemTrans = this.itemTrans;
         
+	var parentItemTrans = this.itemTrans;
 	this._selectItems(titles, urls, function (itemsToUse) {
-		if(!itemsToUse) {
-			ret();
-		} else {
-			var items = [];
-			Zotero.Utilities.processDocuments(itemsToUse,
-				function (doc1) {
-					var url1 = doc1.documentURI;
-					var itemTrans = parentItemTrans;
-					if (itemTrans === undefined) {
-						itemTrans = FW.getScraper(doc1, url1);
-					}
-					if (itemTrans === undefined) {
-					/* nothing to do */
-					} else {
-					itemTrans.makeItems(doc1, url1, attachments[url1],
-						function (item1) {
-							items.push(item1);
-							eachItem(item1, itemTrans, doc1, url1);
-						}, 
-						function() {});
-					}
-				},
-				function () {
-					ret();
-				}
-			);
-		}
+	    if(!itemsToUse) {
+		ret();
+	    } else {
+	        var cb = function (doc1) {
+		    var url1 = doc1.documentURI;
+		    var itemTrans = parentItemTrans;
+		    if (itemTrans === undefined) {
+			itemTrans = FW.getScraper(doc1, url1);
+		    }
+		    if (itemTrans === undefined) {
+			/* nothing to do */
+		    } else {
+			itemTrans.makeItems(doc1, url1, attachments[url1],
+                                            eachItem, function() {});
+		    }
+		};
+	        Zotero.Utilities.processDocuments(itemsToUse, cb, ret);
+	    }
 	});
     };
 };
