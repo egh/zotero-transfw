@@ -1,5 +1,5 @@
 /**
-    Copyright (c) 2010-2011, Erik Hetzner
+    Copyright (c) 2010-2013, Erik Hetzner
 
     This program is free software: you can redistribute it and/or
     modify it under the terms of the GNU Affero General Public License
