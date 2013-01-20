@@ -587,7 +587,7 @@ FW.getScraper = function (doc, url) {
     var itemType = FW.detectWeb(doc, url);
     return FW._scrapers.filter(function(s) {
         return (s.evaluateThing(s['itemType'], doc, url) == itemType)
-		&& (s.evaluateThing(s['detect'], doc, url))
+		&& (s.evaluateThing(s['detect'], doc, url));
     })[0];
 };
 
