@@ -61,6 +61,19 @@ FW._Base = function () {
             return val;
         }
     };
+
+    /*
+     * makeItems is the function that does the work of making an item.
+     * doc: the doc tree for the item
+     * url: the url for the item
+     * attachments ...
+     * eachItem: a function to be called for each item made, with the arguments (doc, url, ...)
+     * ret: the function to call when you are done, with no args
+     */
+    this.makeItems = function (doc, url, attachments, eachItem, ret) {
+        ret();
+    }
+
 };
 
 FW.Scraper = function (init) { 
