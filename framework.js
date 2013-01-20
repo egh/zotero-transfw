@@ -16,6 +16,9 @@
     <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * Flatten a nested array; e.g., [[1], [2,3]] -> [1,2,3]
+ */
 function flatten(a) {
     var retval = new Array();
     for (var i in a) {
