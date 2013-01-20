@@ -341,13 +341,13 @@ FW._MultiScraper = function (init) {
         var urls = [];
         this._makeChoices(this["choices"], doc, url, titles, urls);
         var attachments = this._mkAttachments(doc, url, urls);
+	var parentItemTrans = this.itemTrans;
         
 	this._selectItems(titles, urls, function (itemsToUse) {
 		if(!itemsToUse) {
 			ret([]);
 		} else {
 			var items = [];
-			var parentItemTrans = this.itemTrans;
 			Zotero.Utilities.processDocuments(itemsToUse,
 				function (doc1) {
 					var url1 = doc1.documentURI;
