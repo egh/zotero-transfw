@@ -395,8 +395,8 @@ FW._WebDelegateTranslator = function (init) {
         } else {
             translator.setHandler("translators", function(obj, translators) {
                 if (translators.length) {
-                    translator.setTranslator(translators);
-                    this.translate();
+                    translator.setTranslator(translators[0]);
+                    translator.translate();
                 }
             });
             translator.getTranslators();
