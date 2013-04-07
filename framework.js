@@ -227,7 +227,7 @@ FW._Scraper = function (init) {
 
                 item["attachments"].push({ url      : attachUrl,
                                            title    : attachTitle,
-                                           type     : attachType,
+                                           mimeType : attachType,
                                            snapshot : attachSnapshot });
             }
         }
