@@ -187,7 +187,7 @@ FW._Scraper = function (init) {
         "type",
         "university",
         "url",
-        "version",
+        "versionNumber",
         "videoRecordingType",
         "volume",
         "websiteTitle",
